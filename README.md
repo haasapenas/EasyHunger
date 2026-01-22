@@ -60,7 +60,6 @@ Configure individual food restoration amounts in the `FoodValues` map.
 ## Commands
 - `/sethunger <player> <amount>` - Set player hunger level
 - `/setthirst <player> <amount>` - Set player thirst level
-- `/foodconfig` - Open food config UI
 
 ## Compatibility
 - Works with [MultipleHUD](https://www.curseforge.com/hytale/mods/multiplehud)

@@ -108,17 +108,37 @@
             "Consumable": true,
             "MaxDurability": 10,
             "MaxStack": 1,
-            "Parent": "Potion_Mana",
+            "Scale": 2,
+            "PlayerAnimationsId": {
+                "Parent": "Item",
+                "Animations": {
+                    "Consume": {
+                        "FirstPerson": "Characters/Animations/Items/Main_Handed/Item/Attacks/Drink/Drink_FPS.blockyanim",
+                        "ThirdPerson": "Characters/Animations/Items/Main_Handed/Item/Attacks/Drink/Drink.blockyanim",
+                        "Speed": 1,
+                        "Looping": true
+                    }
+                }
+            },
             "Interactions": {
+                "Primary": "Block_Primary",
                 "Secondary": {
                     "Interactions": [
+                        {
+                            "Type": "EasyHunger_RefillWaterskin",
+                            "AllowedFluids": [
+                                "Water_Source",
+                                "Water"
+                            ]
+                        },
                         {
                             "Type": "Charging",
                             "FailOnDamage": true,
                             "Effects": {
                                 "ItemAnimationId": "Consume",
                                 "ClearAnimationOnFinish": true,
-                                "LocalSoundEventId": "SFX_Health_Potion_High_Drink"
+                                "LocalSoundEventId": "SFX_Health_Potion_Low_Drink",
+                                "ClearSoundEventOnFinish": true
                             },
                             "HorizontalSpeedMultiplier": 0.5,
                             "Next": {

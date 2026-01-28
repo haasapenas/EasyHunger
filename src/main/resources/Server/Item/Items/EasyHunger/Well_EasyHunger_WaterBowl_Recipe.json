@@ -7,6 +7,14 @@
             {
                 "Type": "Processing",
                 "Id": "Well"
+            },
+            {
+                "Type": "Processing",
+                "Id": "Bench_Well"
+            },
+            {
+                "Type": "Processing",
+                "Id": "Bench_Sink"
             }
         ],
         "Input": [
@@ -14,6 +22,6 @@
                 "ItemId": "EasyHunger_WaterBowl_Empty"
             }
         ],
-        "TimeSeconds": 0.5
+        "TimeSeconds": 1.5
     }
 }

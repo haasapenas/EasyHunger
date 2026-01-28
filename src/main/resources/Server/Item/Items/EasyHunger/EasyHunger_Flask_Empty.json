@@ -9,25 +9,6 @@
     "Categories": [
         "Items.Survival"
     ],
-    "Recipe": {
-        "TimeSeconds": 1.5,
-        "Input": [
-            {
-                "ResourceTypeId": "Sands",
-                "Quantity": 2
-            }
-        ],
-        "BenchRequirement": [
-            {
-                "Type": "Crafting",
-                "Categories": [
-                    "Workbench_Survival"
-                ],
-                "Id": "Workbench"
-            }
-        ],
-        "OutputQuantity": 1
-    },
     "Interactions": {
         "Primary": "Block_Primary",
         "Secondary": {
@@ -61,7 +42,6 @@
             "Consumable": true,
             "MaxDurability": 10,
             "MaxStack": 1,
-            "Parent": "Potion_Mana",
             "Interactions": {
                 "Secondary": {
                     "Interactions": [
@@ -80,8 +60,7 @@
                                     "Interactions": [
                                         {
                                             "Type": "ModifyInventory",
-                                            "AdjustHeldItemDurability": -1,
-                                            "BrokenItem": "EasyHunger_Flask_Empty"
+                                            "AdjustHeldItemQuantity": -1
                                         },
                                         {
                                             "Type": "EasyHunger_DrinkWater",

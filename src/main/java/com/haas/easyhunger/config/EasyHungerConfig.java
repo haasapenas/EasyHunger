@@ -27,13 +27,13 @@ public class EasyHungerConfig {
     private static final KeyedCodec<Boolean> THIRST_ENABLED = new KeyedCodec<>("ThirstEnabled", Codec.BOOLEAN);
     private static final KeyedCodec<Integer> MAX_THIRST = new KeyedCodec<>("MaxThirst", Codec.INTEGER);
     private static final KeyedCodec<Float> THIRST_DECAY_RATE = new KeyedCodec<>("ThirstDecayRate", Codec.FLOAT);
-    private static final KeyedCodec<Float> WATER_RESTORE_AMOUNT = new KeyedCodec<>("WaterRestoreAmount", Codec.FLOAT);
     private static final KeyedCodec<Float> SPRINT_THIRST_MULTIPLIER = new KeyedCodec<>("SprintThirstMultiplier", Codec.FLOAT);
     private static final KeyedCodec<Float> THIRSTY_THRESHOLD = new KeyedCodec<>("ThirstyThreshold", Codec.FLOAT);
 
     // Food values (alphabetical order) for individual override support
     // Dynamic Food Values Map
     private static final KeyedCodec<Map<String, Float>> FOOD_VALUES = new KeyedCodec<>("FoodValues", new MapCodec<>(Codec.FLOAT, HashMap::new));
+    private static final KeyedCodec<Map<String, Float>> DRINK_VALUES = new KeyedCodec<>("DrinkValues", new MapCodec<>(Codec.FLOAT, HashMap::new));
     private static final KeyedCodec<Float> THIRST_DAMAGE = new KeyedCodec<>("ThirstDamage", Codec.FLOAT);
 
 
@@ -52,7 +52,6 @@ public class EasyHungerConfig {
             .addField(THIRST_ENABLED, (c, v) -> c.thirstEnabled = v, EasyHungerConfig::isThirstEnabled)
             .addField(MAX_THIRST, (c, v) -> c.maxThirst = v, EasyHungerConfig::getMaxThirst)
             .addField(THIRST_DECAY_RATE, (c, v) -> c.thirstDecayRate = v, EasyHungerConfig::getThirstDecayRate)
-            .addField(WATER_RESTORE_AMOUNT, (c, v) -> c.waterRestoreAmount = v, EasyHungerConfig::getWaterRestoreAmount)
             .addField(SPRINT_THIRST_MULTIPLIER, (c, v) -> c.sprintThirstMultiplier = v, EasyHungerConfig::getSprintThirstMultiplier)
             .addField(THIRST_DAMAGE, (c, v) -> c.thirstDamage = v, EasyHungerConfig::getThirstDamage)
             .addField(THIRSTY_THRESHOLD, (c, v) -> c.thirstyThreshold = v, EasyHungerConfig::getThirstyThreshold)
@@ -60,8 +59,11 @@ public class EasyHungerConfig {
             // === HUD POSITION ===
             .addField(HUD_POSITION, (c, v) -> c.hudPosition = HudPosition.valueOf(v), c -> c.getHudPosition().name())
             
-            // === FOOD VALUES (LAST) ===
+            // === FOOD VALUES ===
             .addField(FOOD_VALUES, (c, v) -> c.foodValues = v, EasyHungerConfig::getFoodValues)
+            
+            // === DRINK VALUES ===
+            .addField(DRINK_VALUES, (c, v) -> c.drinkValues = v, EasyHungerConfig::getDrinkValues)
             .build();
 
     private Integer maxHunger = 50;
@@ -82,12 +84,12 @@ public class EasyHungerConfig {
     private boolean thirstEnabled = true; // Enable/disable thirst system
     private Integer maxThirst = 50; // Match default hunger for symmetry
     private float thirstDecayRate = 0.05f; // Slower than hunger? Or same.
-    private float waterRestoreAmount = 15.0f;
     private float sprintThirstMultiplier = 1.5f;
     private float thirstyThreshold = 20.0f; // Same as hungryThreshold
     
     // Internal map for lookups
     private Map<String, Float> foodValues;
+    private Map<String, Float> drinkValues;
 
     public EasyHungerConfig() {
         foodValues = new HashMap<>();
@@ -146,6 +148,13 @@ public class EasyHungerConfig {
         foodValues.put("Plant_Fruit_Poison", 2.25f);
         foodValues.put("Plant_Fruit_Spiral", 2.75f);
         foodValues.put("Plant_Fruit_Windwillow", 2.5f);
+        
+        // Default drink values (thirst restoration)
+        // Short prefixes work - getDrinkValue uses startsWith matching
+        drinkValues = new HashMap<>();
+        drinkValues.put("EasyHunger_Odre", 15.0f);
+        drinkValues.put("EasyHunger_WaterBowl", 5.0f);
+        drinkValues.put("Container_Bucket", 10.0f);
     }
 
     public float getStarvationTickRate() {
@@ -178,7 +187,6 @@ public class EasyHungerConfig {
     public boolean isThirstEnabled() { return thirstEnabled; }
     public Integer getMaxThirst() { return maxThirst; }
     public float getThirstDecayRate() { return thirstDecayRate; }
-    public float getWaterRestoreAmount() { return waterRestoreAmount; }
     public float getSprintThirstMultiplier() { return sprintThirstMultiplier; }
     public float getThirstyThreshold() { return thirstyThreshold; }
     
@@ -192,6 +200,30 @@ public class EasyHungerConfig {
     
     public void setFoodValue(String foodId, float value) {
         foodValues.put(foodId, value);
+    }
+    
+    // Drink getters/setters/logic
+    public Map<String, Float> getDrinkValues() { return drinkValues; }
+    
+    public Float getDrinkValue(String drinkId) {
+        // First try exact match
+        Float value = drinkValues.get(drinkId);
+        if (value != null && value > 0) {
+            return value;
+        }
+        
+        // Then try partial match (config key is prefix of actual ID)
+        for (java.util.Map.Entry<String, Float> entry : drinkValues.entrySet()) {
+            if (drinkId != null && drinkId.startsWith(entry.getKey())) {
+                return entry.getValue();
+            }
+        }
+        
+        return 0.0f;
+    }
+    
+    public void setDrinkValue(String drinkId, float value) {
+        drinkValues.put(drinkId, value);
     }
 }
 

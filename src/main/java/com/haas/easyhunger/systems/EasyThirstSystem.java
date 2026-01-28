@@ -20,6 +20,8 @@ import com.haas.easyhunger.components.ThirstComponent;
 import com.hypixel.hytale.server.core.entity.movement.MovementStatesComponent;
 import com.hypixel.hytale.protocol.MovementStates;
 import com.haas.easyhunger.utils.HungerProtectionUtils;
+import com.haas.easyhunger.utils.BiomeUtils;
+import com.hypixel.hytale.server.core.entity.EntityUtils;
 import org.checkerframework.checker.nullness.compatqual.NonNullDecl;
 
 import javax.annotation.Nonnull;
@@ -107,7 +109,16 @@ public class EasyThirstSystem extends EntityTickingSystem<EntityStore> {
             return;
         }
         
-        thirst.dehydrate(finalDecay);
+        // Apply biome multiplier to thirst decay
+        float biomeMultiplier = 1.0f;
+        Player player = archetypeChunk.getComponent(index, Player.getComponentType());
+        if (player != null && player.getWorld() != null) {
+            Holder holder = EntityUtils.toHolder(index, archetypeChunk);
+            String biomeName = BiomeUtils.getPlayerBiomeName(player, holder);
+            biomeMultiplier = EasyHunger.get().getBiomeConfig().getThirstMultiplier(biomeName);
+        }
+        
+        thirst.dehydrate(finalDecay * biomeMultiplier);
         float thirstLevel = thirst.getThirstLevel();
         float thirstyThreshold = EasyHunger.get().getConfig().getThirstyThreshold();
 

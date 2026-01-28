@@ -22,6 +22,9 @@ public class EasyHungerPlayerReady {
             PlayerRef playerRef = store.getComponent(ref, PlayerRef.getComponentType());
             if (playerRef == null) return;
 
+            // Trigger recipe pruning (will only run if needed based on config)
+            com.haas.easyhunger.EasyHunger.get().pruneRecipes();
+
             HungerComponent hungerComponent = store.ensureAndGetComponent(ref, HungerComponent.getComponentType());
             float hungerLevel = hungerComponent.getHungerLevel();
 

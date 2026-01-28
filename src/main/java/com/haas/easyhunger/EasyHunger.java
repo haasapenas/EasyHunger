@@ -12,6 +12,7 @@ import com.hypixel.hytale.server.core.util.Config;
 import com.haas.easyhunger.commands.SetHungerCommand;
 import com.haas.easyhunger.components.HungerComponent;
 import com.haas.easyhunger.config.EasyHungerConfig;
+import com.haas.easyhunger.config.BiomeModifiersConfig;
 import com.haas.easyhunger.events.GameModeChangeListener;
 import com.haas.easyhunger.events.EasyHungerPlayerReady;
 import com.haas.easyhunger.systems.OnDeathSystem;
@@ -23,6 +24,7 @@ import java.util.logging.Level;
 public class EasyHunger extends JavaPlugin {
     private static EasyHunger instance;
     private final Config<EasyHungerConfig> config;
+    private final Config<BiomeModifiersConfig> biomeConfig;
     private ComponentType<EntityStore, HungerComponent> hungerComponentType;
     private ComponentType<EntityStore, com.haas.easyhunger.components.ThirstComponent> thirstComponentType;
 
@@ -32,6 +34,7 @@ public class EasyHunger extends JavaPlugin {
         super(init);
         instance = this;
         this.config = this.withConfig("HungerConfig", EasyHungerConfig.CODEC);
+        this.biomeConfig = this.withConfig("BiomeModifiers", BiomeModifiersConfig.CODEC);
     }
 
     @Override
@@ -39,6 +42,7 @@ public class EasyHunger extends JavaPlugin {
         super.setup();
 
         this.config.save();
+        this.biomeConfig.save();
 
         // register hunger component
         this.hungerComponentType = this.getEntityStoreRegistry()
@@ -81,6 +85,44 @@ public class EasyHunger extends JavaPlugin {
         // register admin commands
         this.getCommandRegistry().registerCommand(new SetHungerCommand());
         this.getCommandRegistry().registerCommand(new com.haas.easyhunger.commands.SetThirstCommand());
+
+        // register admin commands
+        this.getCommandRegistry().registerCommand(new SetHungerCommand());
+        this.getCommandRegistry().registerCommand(new com.haas.easyhunger.commands.SetThirstCommand());
+
+        // Try to prune recipes immediately, but also plan for a delayed pruning if needed
+        this.pruneRecipes();
+    }
+
+    public void pruneRecipes() {
+        if (this.getConfig().isThirstEnabled()) {
+            return;
+        }
+
+        try {
+            java.lang.reflect.Field registriesField = com.hypixel.hytale.builtin.crafting.CraftingPlugin.class.getDeclaredField("registries");
+            registriesField.setAccessible(true);
+            java.util.Map<String, com.hypixel.hytale.builtin.crafting.BenchRecipeRegistry> registries = 
+                (java.util.Map<String, com.hypixel.hytale.builtin.crafting.BenchRecipeRegistry>) registriesField.get(null);
+            
+            if (registries != null) {
+                for (com.hypixel.hytale.builtin.crafting.BenchRecipeRegistry registry : registries.values()) {
+                    boolean changed = false;
+                    for (com.hypixel.hytale.server.core.asset.type.item.config.CraftingRecipe recipe : registry.getAllRecipes()) {
+                        String outputId = recipe.getPrimaryOutput() != null ? recipe.getPrimaryOutput().getItemId() : null;
+                        if ("EasyHunger_Odre_Empty".equals(outputId) || "EasyHunger_WaterBowl_Empty".equals(outputId)) {
+                            registry.removeRecipe(recipe.getId());
+                            changed = true;
+                        }
+                    }
+                    if (changed) {
+                        registry.recompute();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.at(java.util.logging.Level.SEVERE).log("Failed to robustly prune Waterskin recipes", e);
+        }
     }
 
     public void saveConfig() {
@@ -97,6 +139,10 @@ public class EasyHunger extends JavaPlugin {
 
     public EasyHungerConfig getConfig() {
         return this.config.get();
+    }
+
+    public BiomeModifiersConfig getBiomeConfig() {
+        return this.biomeConfig.get();
     }
 
     public static EasyHunger get() {

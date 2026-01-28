@@ -63,15 +63,28 @@ public class DrinkWaterInteraction extends SimpleInstantInteraction {
             if (thirst != null) {
                 float max = EasyHunger.get().getConfig().getMaxThirst();
                 if (thirst.getThirstLevel() < max) {
-                    // Use config value for water restore amount
-                    float restoreAmount = EasyHunger.get().getConfig().getWaterRestoreAmount();
+                    // Try to get drink value from config based on item ID
+                    float restoreAmount = thirstRestoreAmount; // Default from JSON
+                    
+                    // Get item ID from held item if available
+                    if (context.getHeldItem() != null) {
+                        String itemId = context.getHeldItem().getItemId();
+                        // Remove leading asterisk if present (Hytale adds this for state variants)
+                        if (itemId != null && itemId.startsWith("*")) {
+                            itemId = itemId.substring(1);
+                        }
+                        Float configValue = EasyHunger.get().getConfig().getDrinkValue(itemId);
+                        if (configValue > 0) {
+                            restoreAmount = configValue;
+                        }
+                    } else {
+                        // HeldItem is null, use default
+                    }
+                    
                     thirst.drink(restoreAmount);
                     
                     // Update HUD
                     EasyWaterHud.updatePlayerThirstLevel(playerRef, thirst.getThirstLevel());
-                    
-                    // Log info
-                    // EasyHunger.logInfo("[DrinkInteraction] Drank Water. + " + thirstRestoreAmount);
                 } else {
                      // Debug: EasyHunger.logInfo("[DrinkInteraction] Thirst Full.");
                 }

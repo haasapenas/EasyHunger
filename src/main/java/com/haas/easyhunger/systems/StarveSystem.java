@@ -20,6 +20,9 @@ import com.haas.easyhunger.EasyHunger;
 import com.haas.easyhunger.ui.EasyHungerHud;
 import com.haas.easyhunger.components.HungerComponent;
 import com.haas.easyhunger.utils.HungerProtectionUtils;
+import com.haas.easyhunger.utils.BiomeUtils;
+import com.haas.easyhunger.config.BiomeModifiersConfig;
+import com.hypixel.hytale.server.core.entity.EntityUtils;
 import org.checkerframework.checker.nullness.compatqual.NonNullDecl;
 
 import javax.annotation.Nonnull;
@@ -108,7 +111,17 @@ public class StarveSystem extends EntityTickingSystem<EntityStore> {
         }
         
         float staminaModifier = ((10.0f - lowestStaminaSeen) / 10.0f) * this.starvationStaminaModifier;
-        hunger.starve(this.starvationPerTick + staminaModifier);
+        
+        // Apply biome multiplier
+        float biomeMultiplier = 1.0f;
+        Player player = archetypeChunk.getComponent(index, Player.getComponentType());
+        if (player != null && player.getWorld() != null) {
+            Holder holder = EntityUtils.toHolder(index, archetypeChunk);
+            String biomeName = BiomeUtils.getPlayerBiomeName(player, holder);
+            biomeMultiplier = EasyHunger.get().getBiomeConfig().getHungerMultiplier(biomeName);
+        }
+        
+        hunger.starve((this.starvationPerTick + staminaModifier) * biomeMultiplier);
 
         float hungerLevel = hunger.getHungerLevel();
         Ref<EntityStore> ref = archetypeChunk.getReferenceTo(index);

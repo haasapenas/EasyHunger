@@ -55,64 +55,71 @@ public class EasyThirstHandler {
             // Filter Move/Drops
             if (transactionInfo.contains("MoveTransaction")) return; 
             
-            // Check Keywords
-            if (!containsThirstKeyword(lowerInfo)) return;
+            // Removed keyword check - rely on config prefix matching only
             
             if (transactionInfo.contains("query=null")) return;
 
             // Check Last Item Consumption
             if (matchesLastItemConsumption(transaction)) {
                 String itemId = extractItemIdFromTransaction(transaction);
-                float thirstRestore = EasyHunger.get().getConfig().getWaterRestoreAmount(); // Use global amount for now
-                // Or check config "Food" values if user adds drinks there? 
-                // Currently only "water" logic uses default amount.
-                // If special drink, maybe we should look it up?
-                // I'll check config for specific ID override, else default.
                 
-                Float specificValue = EasyHunger.get().getConfig().getFoodValue(itemId);
-                if (specificValue > 0) {
-                    thirstRestore = specificValue;
+                // Remove leading asterisk if present (Hytale adds this for state variants)
+                if (itemId != null && itemId.startsWith("*")) {
+                    itemId = itemId.substring(1);
                 }
+                
+                // Lookup drink value from config - only restore if configured
+                Float drinkValue = EasyHunger.get().getConfig().getDrinkValue(itemId);
+                
+                // Skip EasyHunger items - they use EasyHunger_DrinkWater interaction which already handles thirst
+                if (itemId != null && itemId.startsWith("EasyHunger_")) {
+                    return;
+                }
+                
+                // Apply thirst restoration if configured in config
+                if (drinkValue != null && drinkValue > 0) {
+                    
+                    // Get player's thirst component and restore thirst (same pattern as FoodHandler)
+                    try {
+                        var store = player.getReference().getStore();
+                        
+                        ComponentAccessor accessor = null;
+                        if (store instanceof ComponentAccessor) {
+                            accessor = (ComponentAccessor) store;
+                        } else {
+                            accessor = (ComponentAccessor) (Object) store;
+                        }
 
-                if (thirstRestore > 0) {
-                     try {
-                         var store = player.getReference().getStore();
-                         ComponentAccessor accessor = null;
-                         if (store instanceof ComponentAccessor) {
-                             accessor = (ComponentAccessor) store;
-                         } else {
-                             accessor = (ComponentAccessor) (Object) store;
-                         }
-
-                         ThirstComponent thirst = (ThirstComponent) accessor.getComponent(
-                             (Ref) player.getReference(), 
-                             (ComponentType) (Object) this.thirstComponentType
-                         );
+                        ThirstComponent thirst = (ThirstComponent) accessor.getComponent(
+                            (Ref) player.getReference(), 
+                            (ComponentType) (Object) this.thirstComponentType
+                        );
 
                         if (thirst != null) {
-                            float current = thirst.getThirstLevel();
-                            float maxThirst = EasyHunger.get().getConfig().getMaxThirst();
-                            
-                            if (current < maxThirst) { 
-                               thirst.drink(thirstRestore);
-                               
-                               try {
-                                   Object refObj = player.getReference();
-                                   if (refObj instanceof PlayerRef) {
-                                       EasyWaterHud.updatePlayerThirstLevel(
-                                           (PlayerRef) refObj, 
-                                           thirst.getThirstLevel()
-                                       );
-                                   }
-                               } catch (Exception e) {
-                                   // Debug only
-                               }
-                               // Debug: EasyHunger.logInfo("[Thirst] Drank " + itemId + ". Restore: " + thirstRestore);
+                            float max = EasyHunger.get().getConfig().getMaxThirst();
+                            if (thirst.getThirstLevel() < max) {
+                                thirst.drink(drinkValue);
+                                
+                                // Update HUD
+                                try {
+                                    if (accessor != null) {
+                                        PlayerRef playerRef = (PlayerRef) accessor.getComponent(
+                                            (Ref) player.getReference(), 
+                                            (ComponentType) (Object) PlayerRef.getComponentType()
+                                        );
+                                        
+                                        if (playerRef != null) {
+                                            EasyWaterHud.updatePlayerThirstLevel(playerRef, thirst.getThirstLevel());
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    // HUD update failed, ignore
+                                }
                             }
                         }
-                     } catch (Exception e) {
-                          EasyHunger.logInfo("[Thirst] Error applying thirst: " + e.toString());
-                     }
+                    } catch (Exception e) {
+                        EasyHunger.logInfo("[ThirstHandler] Error applying thirst: " + e.toString());
+                    }
                 }
             }
 
@@ -131,16 +138,19 @@ public class EasyThirstHandler {
              com.hypixel.hytale.server.core.inventory.ItemStack before = slotTrans.getSlotBefore();
              com.hypixel.hytale.server.core.inventory.ItemStack after = slotTrans.getSlotAfter();
 
-             if (before != null && before.getQuantity() == 1) {
-                if (after == null || after.getQuantity() == 0) return true;
-                // Special case for Drinks: Empty Bottle might be Left?
-                // If Before=WaterBottle, After=GlassBottle (id change).
-                // Or After=null (consumed)?
-                // Hytale usually replaces with Empty Bottle.
-                // So "After not null" but DIFFERENT ID.
-                // I should check ID change too.
-                // Wait, logic above only checks Quantity.
-                // I'll stick to Standard Logic for now. If it fails for buckets/bottles, I'll fix later.
+             if (before != null && before.getQuantity() >= 1) {
+                // Detect quantity reduction (consumption)
+                int afterQty = (after != null) ? after.getQuantity() : 0;
+                if (afterQty < before.getQuantity()) return true;
+                
+                // Detect item transformation (e.g., milk bucket -> empty bucket)
+                if (after != null && afterQty == before.getQuantity()) {
+                    String beforeId = before.getItemId();
+                    String afterId = after.getItemId();
+                    if (beforeId != null && afterId != null && !beforeId.equals(afterId)) {
+                        return true; // Item ID changed = consumption/transformation
+                    }
+                }
              }
              return false;
         }
@@ -157,8 +167,9 @@ public class EasyThirstHandler {
                      com.hypixel.hytale.server.core.inventory.ItemStack before = slotTrans.getSlotBefore();
                      com.hypixel.hytale.server.core.inventory.ItemStack after = slotTrans.getSlotAfter();
         
-                    if (before != null && before.getQuantity() == 1) {
-                        if (after == null || after.getQuantity() == 0) return true;
+                    if (before != null && before.getQuantity() >= 1) {
+                        int afterQty = (after != null) ? after.getQuantity() : 0;
+                        if (afterQty < before.getQuantity()) return true;
                     }
                 }
             }

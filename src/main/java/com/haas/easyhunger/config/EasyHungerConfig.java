@@ -71,7 +71,7 @@ public class EasyHungerConfig {
     private float starvationPerTick = 0.04f;
 
     public Integer getMaxHunger() { return maxHunger; }
-    private float starvationStaminaModifier = 0.175f;
+    private float starvationStaminaModifier = 0.177f;
     private float hungryThreshold = 20.0f;
     private float starvationDamage = 5.0f;
     private float thirstDamage = 5.0f;

@@ -66,7 +66,7 @@ Configure individual food restoration amounts in the `FoodValues` map.
 
 ## Credits & Attribution
 
-This mod is based on **Hungry** by [xcm](https://www.curseforge.com/hytale/mods/hungry), licensed under AGPLv3.
+This mod is based on **Hungry** by [Aex12](https://www.curseforge.com/hytale/mods/hungry), licensed under AGPLv3.
 
 ### Original Hungry Mod Contributors
 - [trouble-dev](https://github.com/trouble-dev): UI guides and reference plugins

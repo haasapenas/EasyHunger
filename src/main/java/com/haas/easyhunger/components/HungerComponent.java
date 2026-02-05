@@ -66,6 +66,12 @@ public class HungerComponent implements Component<EntityStore> {
     public float getLastSentHunger() { return lastSentHunger; }
     public void setLastSentHunger(float v) { this.lastSentHunger = v; }
 
+    // WellFed system elapsed time tracking
+    private float wellFedElapsedTime = 0.0f;
+    public float getWellFedElapsedTime() { return wellFedElapsedTime; }
+    public void addWellFedElapsedTime(float dt) { wellFedElapsedTime += dt; }
+    public void resetWellFedElapsedTime() { wellFedElapsedTime = 0.0f; }
+
     public float getHungerLevel () {
         return this.hungerLevel;
     }

@@ -2,6 +2,9 @@
     "Type": "Serial",
     "Interactions": [
         {
+            "Type": "EasyHunger_StartDrinking"
+        },
+        {
             "Type": "Charging",
             "FailOnDamage": true,
             "Effects": {
@@ -10,6 +13,9 @@
             },
             "HorizontalSpeedMultiplier": 0.5,
             "Next": {
+                "0.0": {
+                    "Type": "EasyHunger_FailedDrinking"
+                },
                 "1.5": {
                     "Type": "ModifyInventory",
                     "AdjustHeldItemQuantity": -1,
@@ -21,7 +27,7 @@
                 }
             },
             "Failed": {
-                "Type": "Simple"
+                "Type": "EasyHunger_FailedDrinking"
             }
         }
     ]

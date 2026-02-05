@@ -19,6 +19,7 @@ public class EasyWaterHud extends CustomUIHud {
     static public final String hudIdentifier = "com.haas.easyhunger.hud.water";
     private GameMode gameMode;
     private float thirstLevel;
+    private float previewThirstRestoration = 0.0f;
 
     public EasyWaterHud(@NonNullDecl PlayerRef playerRef, GameMode gameMode, float thirstLevel) {
         super(playerRef);
@@ -79,6 +80,26 @@ public class EasyWaterHud extends CustomUIHud {
         uiCommandBuilder.set("#EasyWaterThirstBar.Value", barValue);
         uiCommandBuilder.set("#EasyWaterCreativeThirstBar.Value", barValue);
         uiCommandBuilder.set("#EasyWaterProgressBarEffect.Value", barValue);
+        
+        // Also update preview if active
+        if (this.previewThirstRestoration != 0.0f) {
+            updateThirstPreview(uiCommandBuilder, this.previewThirstRestoration);
+        }
+    }
+
+    protected void updateThirstPreview(UICommandBuilder uiCommandBuilder, float thirstRestoration) {
+        this.previewThirstRestoration = thirstRestoration;
+        
+        if (thirstRestoration == 0.0f) {
+            uiCommandBuilder.set("#EasyWaterPreviewBar.Value", 0.0f);
+            return;
+        }
+        
+        float max = EasyHunger.get().getConfig().getMaxThirst();
+        float expectedLevel = Math.min(this.thirstLevel + thirstRestoration, max);
+        float previewBarValue = expectedLevel / max;
+        
+        uiCommandBuilder.set("#EasyWaterPreviewBar.Value", previewBarValue);
     }
 
     protected void updateGameMode(UICommandBuilder uiCommandBuilder, GameMode gameMode) {
@@ -98,6 +119,15 @@ public class EasyWaterHud extends CustomUIHud {
         hud.updateThirstLevel(uiCommandBuilder, thirstLevel);
         hud.update(false, uiCommandBuilder);
     }
+    
+    static public void updatePlayerThirstPreview(@NonNullDecl PlayerRef playerRef, float thirstRestoration) {
+        EasyWaterHud hud = hudMap.get(playerRef);
+        if (hud == null) return;
+        UICommandBuilder uiCommandBuilder = new UICommandBuilder();
+        hud.updateThirstPreview(uiCommandBuilder, thirstRestoration);
+        hud.update(false, uiCommandBuilder);
+    }
+    
     static public void updatePlayerGameMode(@NonNullDecl PlayerRef playerRef, GameMode gameMode) {
         EasyWaterHud hud = hudMap.get(playerRef);
         if (hud == null) return;

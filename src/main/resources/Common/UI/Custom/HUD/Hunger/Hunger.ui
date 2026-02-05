@@ -1,5 +1,6 @@
 ﻿@EasyHungerAdventureBarFill = "HungerBarFill.png";
 @EasyHungerCreativeBarFill = "CreativeHungerBarFill.png";
+@EasyHungerPreviewBarFill = "HungerBarFillPreview.png";
 
 Group {
     LayoutMode: Bottom;
@@ -11,6 +12,12 @@ Group {
             Anchor: (Width: 318, Height: 12);
             Background: "HungerBackground.png";
 
+            ProgressBar #EasyHungerPreviewBar {
+                Anchor: (Width: 318, Height: 12);
+                BarTexturePath: @EasyHungerPreviewBarFill;
+                Value: 0;
+                Visible: true;
+            }
             ProgressBar #EasyHungerHungerBar {
                 Anchor: (Width: 318, Height: 12);
                 BarTexturePath: @EasyHungerAdventureBarFill;

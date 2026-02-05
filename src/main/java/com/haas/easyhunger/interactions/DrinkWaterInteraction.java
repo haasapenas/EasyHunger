@@ -21,7 +21,7 @@ import javax.annotation.Nonnull;
 
 public class DrinkWaterInteraction extends SimpleInstantInteraction {
     
-    private float thirstRestoreAmount = 20.0f;
+    private float thirstRestoreAmount = 0.0f;
     
     public static final BuilderCodec<DrinkWaterInteraction> CODEC = 
         ((BuilderCodec.Builder) ((BuilderCodec.Builder) BuilderCodec.builder(
@@ -63,28 +63,41 @@ public class DrinkWaterInteraction extends SimpleInstantInteraction {
             if (thirst != null) {
                 float max = EasyHunger.get().getConfig().getMaxThirst();
                 if (thirst.getThirstLevel() < max) {
-                    // Try to get drink value from config based on item ID
-                    float restoreAmount = thirstRestoreAmount; // Default from JSON
+                    // Default fallback if item not in config
+                    float restoreAmount = 15.0f;
                     
-                    // Get item ID from held item if available
-                    if (context.getHeldItem() != null) {
-                        String itemId = context.getHeldItem().getItemId();
+                    // Get item ID using getOriginalItemType() - always available even for last item in stack
+                    com.hypixel.hytale.server.core.asset.type.item.config.Item item = context.getOriginalItemType();
+                    String itemId = (item != null) ? item.getId() : null;
+                    
+                    // Fallback to getHeldItem if original is null
+                    if (itemId == null && context.getHeldItem() != null) {
+                        itemId = context.getHeldItem().getItemId();
+                    }
+                    
+                    // Clean up item ID
+                    if (itemId != null) {
                         // Remove leading asterisk if present (Hytale adds this for state variants)
-                        if (itemId != null && itemId.startsWith("*")) {
+                        if (itemId.startsWith("*")) {
                             itemId = itemId.substring(1);
                         }
+                        // Remove state suffix (e.g., ":Filled_Water")
+                        if (itemId.contains(":")) {
+                            itemId = itemId.substring(0, itemId.indexOf(":"));
+                        }
+                        
                         Float configValue = EasyHunger.get().getDrinksConfig().getDrinkValue(itemId);
                         if (configValue > 0) {
                             restoreAmount = configValue;
                         }
-                    } else {
-                        // HeldItem is null, use default
                     }
+                    
                     
                     thirst.drink(restoreAmount);
                     
-                    // Update HUD
+                    // Update HUD and clear preview
                     EasyWaterHud.updatePlayerThirstLevel(playerRef, thirst.getThirstLevel());
+                    EasyWaterHud.updatePlayerThirstPreview(playerRef, 0.0f);
                 } else {
                      // Debug: EasyHunger.logInfo("[DrinkInteraction] Thirst Full.");
                 }

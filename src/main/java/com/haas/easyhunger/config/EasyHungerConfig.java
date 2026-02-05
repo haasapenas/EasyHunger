@@ -34,6 +34,10 @@ public class EasyHungerConfig {
     private static final KeyedCodec<Float> THIRST_DAMAGE = new KeyedCodec<>("ThirstDamage", Codec.FLOAT);
     private static final KeyedCodec<Boolean> PAUSE_WHILE_SLEEPING = new KeyedCodec<>("PauseWhileSleeping", Codec.BOOLEAN);
 
+    // Well Fed Configuration
+    private static final KeyedCodec<Boolean> WELL_FED_ENABLED = new KeyedCodec<>("WellFedEnabled", Codec.BOOLEAN);
+    private static final KeyedCodec<Float> WELL_FED_THRESHOLD = new KeyedCodec<>("WellFedThreshold", Codec.FLOAT);
+
 
     public static final BuilderCodec<EasyHungerConfig> CODEC = BuilderCodec.builder(EasyHungerConfig.class, EasyHungerConfig::new)
             // === HUNGER / FOOD CONFIGS ===
@@ -60,6 +64,10 @@ public class EasyHungerConfig {
             
             // === SLEEP PAUSE ===
             .addField(PAUSE_WHILE_SLEEPING, (c, v) -> c.pauseWhileSleeping = v, EasyHungerConfig::isPauseWhileSleeping)
+            
+            // === WELL FED BONUS ===
+            .addField(WELL_FED_ENABLED, (c, v) -> c.wellFedEnabled = v, EasyHungerConfig::isWellFedEnabled)
+            .addField(WELL_FED_THRESHOLD, (c, v) -> c.wellFedThreshold = v, EasyHungerConfig::getWellFedThreshold)
             .build();
 
     private Integer maxHunger = 50;
@@ -83,6 +91,10 @@ public class EasyHungerConfig {
     private float sprintThirstMultiplier = 1.5f;
     private float thirstyThreshold = 20.0f; // Same as hungryThreshold
     private boolean pauseWhileSleeping = true; // Pause hunger/thirst while sleeping
+
+    // Well Fed settings
+    private boolean wellFedEnabled = true;
+    private float wellFedThreshold = 35.0f; // Absolute value (like HungryThreshold)
 
 
     public EasyHungerConfig() {
@@ -121,6 +133,10 @@ public class EasyHungerConfig {
     public float getSprintThirstMultiplier() { return sprintThirstMultiplier; }
     public float getThirstyThreshold() { return thirstyThreshold; }
     public boolean isPauseWhileSleeping() { return pauseWhileSleeping; }
+    
+    // Well Fed getters
+    public boolean isWellFedEnabled() { return wellFedEnabled; }
+    public float getWellFedThreshold() { return wellFedThreshold; }
 
 }
 

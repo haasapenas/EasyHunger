@@ -97,6 +97,7 @@
                 "Material": "Empty",
                 "DrawType": "Model",
                 "CustomModel": "Items/EasyHunger_WaterBowl_Full.blockymodel",
+                "CustomModelScale": 0.5,
                 "CustomModelTexture": [
                     {
                         "Texture": "Items/Pouch.png",
@@ -132,6 +133,9 @@
                             ]
                         },
                         {
+                            "Type": "EasyHunger_StartDrinking"
+                        },
+                        {
                             "Type": "Charging",
                             "FailOnDamage": true,
                             "Effects": {
@@ -142,6 +146,9 @@
                             },
                             "HorizontalSpeedMultiplier": 0.5,
                             "Next": {
+                                "0.0": {
+                                    "Type": "EasyHunger_FailedDrinking"
+                                },
                                 "1.5": {
                                     "Type": "Serial",
                                     "Interactions": [
@@ -158,7 +165,7 @@
                                 }
                             },
                             "Failed": {
-                                "Type": "Simple"
+                                "Type": "EasyHunger_FailedDrinking"
                             }
                         }
                     ]

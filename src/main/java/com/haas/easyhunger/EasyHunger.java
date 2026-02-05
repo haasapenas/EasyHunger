@@ -19,6 +19,7 @@ import com.haas.easyhunger.events.GameModeChangeListener;
 import com.haas.easyhunger.events.EasyHungerPlayerReady;
 import com.haas.easyhunger.systems.OnDeathSystem;
 import com.haas.easyhunger.systems.StarveSystem;
+import com.haas.easyhunger.systems.WellFedSystem;
 import org.checkerframework.checker.nullness.compatqual.NonNullDecl;
 
 import java.util.logging.Level;
@@ -84,12 +85,21 @@ public class EasyHunger extends JavaPlugin {
         // register thirst system
         entityStoreRegistry.registerSystem(com.haas.easyhunger.systems.EasyThirstSystem.create());
         
+        // register well fed regeneration system
+        if (this.config.get().isWellFedEnabled()) {
+            entityStoreRegistry.registerSystem(WellFedSystem.create());
+            logInfo("WellFed regeneration system enabled (threshold: " + this.config.get().getWellFedThreshold() + "%)");
+        }
 
         // Interactions
         final var interactionRegistry = this.getCodecRegistry(Interaction.CODEC);
         interactionRegistry.register("EasyHunger_DrinkWater", com.haas.easyhunger.interactions.DrinkWaterInteraction.class, com.haas.easyhunger.interactions.DrinkWaterInteraction.CODEC);
         interactionRegistry.register("EasyHunger_ConsumeFood", com.haas.easyhunger.interactions.ConsumeFoodInteraction.class, com.haas.easyhunger.interactions.ConsumeFoodInteraction.CODEC);
         interactionRegistry.register("EasyHunger_RefillWaterskin", com.haas.easyhunger.interactions.RefillWaterskinInteraction.class, com.haas.easyhunger.interactions.RefillWaterskinInteraction.CODEC);
+        interactionRegistry.register("EasyHunger_StartFeeding", com.haas.easyhunger.interactions.StartFeedingInteraction.class, com.haas.easyhunger.interactions.StartFeedingInteraction.CODEC);
+        interactionRegistry.register("EasyHunger_FailedFeeding", com.haas.easyhunger.interactions.FailedFeedingInteraction.class, com.haas.easyhunger.interactions.FailedFeedingInteraction.CODEC);
+        interactionRegistry.register("EasyHunger_StartDrinking", com.haas.easyhunger.interactions.StartDrinkingInteraction.class, com.haas.easyhunger.interactions.StartDrinkingInteraction.CODEC);
+        interactionRegistry.register("EasyHunger_FailedDrinking", com.haas.easyhunger.interactions.FailedDrinkingInteraction.class, com.haas.easyhunger.interactions.FailedDrinkingInteraction.CODEC);
 
         // setup hunger component and hud on player join
         this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, EasyHungerPlayerReady::handle);

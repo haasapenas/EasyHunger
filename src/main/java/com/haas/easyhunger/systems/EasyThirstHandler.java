@@ -76,6 +76,16 @@ public class EasyThirstHandler {
                     return;
                 }
                 
+                // Skip items that use Root_Secondary_Consume_Potion - Consume_Charge_Potion_Fast now handles them
+                // Only skip specific mod prefixes that use the potion consumption chain
+                if (itemId != null && (
+                    itemId.startsWith("NoCube_Drink") || 
+                    itemId.startsWith("Brewery_") || 
+                    itemId.startsWith("NoCube_Template_Juice")
+                )) {
+                    return;
+                }
+                
                 // Apply thirst restoration if configured in config
                 if (drinkValue != null && drinkValue > 0) {
                     

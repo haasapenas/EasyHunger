@@ -66,16 +66,19 @@ public class ConsumeFoodInteraction extends SimpleInstantInteraction {
                     com.hypixel.hytale.server.core.asset.type.item.config.Item item = context.getOriginalItemType();
                     String itemId = (item != null) ? item.getId() : "unknown";
                     
-                    // Check config for this item's value, fallback to JSON value
+                    // Check config for this item's value - only restore if configured
                     float restoreAmount = EasyHunger.get().getFoodsConfig().getFoodValue(itemId);
                     if (restoreAmount <= 0) {
-                        restoreAmount = this.hungerRestoreAmount;
+                        // Item not in FoodsConfig - don't restore hunger (might be a drink like Food_Drink_*)
+                        context.getState().state = InteractionState.Finished;
+                        return;
                     }
                     
                     hunger.feed(restoreAmount);
                     
-                    // Update HUD
+                    // Update HUD and clear preview
                     EasyHungerHud.updatePlayerHungerLevel(playerRef, hunger.getHungerLevel());
+                    EasyHungerHud.updatePlayerHungerPreview(playerRef, 0.0f);
                 }
             }
             

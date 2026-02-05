@@ -21,6 +21,7 @@ public class EasyHungerHud extends CustomUIHud {
     static public final String hudIdentifier = "com.haas.easyhunger.hud.hunger";
     private GameMode gameMode;
     private float hungerLevel;
+    private float previewHungerRestoration = 0.0f;
 
     public EasyHungerHud(@NonNullDecl PlayerRef playerRef, GameMode gameMode, float hungerLevel) {
         super(playerRef);
@@ -79,6 +80,26 @@ public class EasyHungerHud extends CustomUIHud {
         uiCommandBuilder.set("#EasyHungerHungerBar.Value", barValue);
         uiCommandBuilder.set("#EasyHungerCreativeHungerBar.Value", barValue);
         uiCommandBuilder.set("#EasyHungerProgressBarEffect.Value", barValue);
+        
+        // Also update preview if active
+        if (this.previewHungerRestoration != 0.0f) {
+            updateHungerPreview(uiCommandBuilder, this.previewHungerRestoration);
+        }
+    }
+
+    protected void updateHungerPreview(UICommandBuilder uiCommandBuilder, float hungerRestoration) {
+        this.previewHungerRestoration = hungerRestoration;
+        
+        if (hungerRestoration == 0.0f) {
+            uiCommandBuilder.set("#EasyHungerPreviewBar.Value", 0.0f);
+            return;
+        }
+        
+        float max = EasyHunger.get().getConfig().getMaxHunger();
+        float expectedLevel = Math.min(this.hungerLevel + hungerRestoration, max);
+        float previewBarValue = expectedLevel / max;
+        
+        uiCommandBuilder.set("#EasyHungerPreviewBar.Value", previewBarValue);
     }
 
     protected void updateGameMode(UICommandBuilder uiCommandBuilder, GameMode gameMode) {
@@ -98,6 +119,15 @@ public class EasyHungerHud extends CustomUIHud {
         hud.updateHungerLevel(uiCommandBuilder, hungerLevel);
         hud.update(false, uiCommandBuilder);
     }
+    
+    static public void updatePlayerHungerPreview(@NonNullDecl PlayerRef playerRef, float hungerRestoration) {
+        EasyHungerHud hud = hudMap.get(playerRef);
+        if (hud == null) return;
+        UICommandBuilder uiCommandBuilder = new UICommandBuilder();
+        hud.updateHungerPreview(uiCommandBuilder, hungerRestoration);
+        hud.update(false, uiCommandBuilder);
+    }
+    
     static public void updatePlayerGameMode(@NonNullDecl PlayerRef playerRef, GameMode gameMode) {
         EasyHungerHud hud = hudMap.get(playerRef);
         if (hud == null) return;
@@ -106,6 +136,3 @@ public class EasyHungerHud extends CustomUIHud {
         hud.update(false, uiCommandBuilder);
     }
 }
-
-
-
